@@ -1,0 +1,122 @@
+# SmartParcel – Smart Apartment Parcel Management & Scheduled Delivery System
+
+A complete full-stack apartment community parcel management and delivery scheduling platform built with **React (Vite)**, **Java 21 / Spring Boot 3.4**, and **MySQL 8.0**.
+
+---
+
+## 🌟 Key Application Features
+
+### 🏢 1. Security Gate Operations Desk
+* **Quick Parcel Intake**: Rapid registration with popular courier partner chips (Amazon, Flipkart, Delhivery, BlueDart, DTDC, India Post).
+* **One-Click Tracking Generator**: Generate realistic tracking codes (`AMZ-4819`, `FK-2931`) instantly without manual typing during demonstrations.
+* **Apartment Address Book**: Quick-select apartment flats (`A-101`, `B-201`, `C-301`) with resident contact details pre-filled.
+* **OTP Verification & Handover Station**:
+  * One-click demo OTP generation with high-visibility golden badge.
+  * One-click auto-fill OTP for effortless evaluation during project viva.
+  * Handover confirmation with instant receipt generation.
+
+### 🏠 2. Resident Self-Service Portal
+* **Apartment Suite Selector**: Effortlessly switch between flats or input custom door numbers.
+* **Live In-App Gate Notifications**: Simulates SMS/WhatsApp alerts for incoming packages awaiting pickup.
+* **3-Stage Visual Progress Stepper**: Real-time status tracking:
+  1. *Desk Inward* (Package logged at society gate)
+  2. *Window Slotted* (Resident selected preferred collection window)
+  3. *Handed Over* (Verified via OTP and collected)
+* **Delivery Window Booking**: 5 interactive time chips (`8:00 AM – 10:00 AM`, `10:00 AM – 12:00 PM`, `1:00 PM – 3:00 PM`, `4:00 PM – 6:00 PM`, `7:00 PM – 9:00 PM`).
+* **Digital Pickup Pass**: View and display an official apartment pass with simulated QR code for gate verification.
+
+### 📊 3. Administrator Operations & Audit Dashboard
+* **Executive KPI Cards**: Real-time counters for Total Society Parcels, Active at Desk, Scheduled Delivery Windows, and Completed Handovers.
+* **Courier Distribution**: Real-time volume distribution across courier companies.
+* **1-Click Demo Data Seeder**: Injects 6 realistic packages across different flats and statuses for immediate, vibrant demonstrations.
+* **Society Audit Log Exporter**: Export and download parcel movement records as a CSV file.
+* **Record Management**: Delete individual records or reset the test database.
+* **Filter & Search Bar**: Search by tracking ID, courier, recipient, or flat number; filter by status tabs.
+
+---
+
+## 🛠️ Technology Stack
+* **Frontend**: React 18 / 19, Vite, Lucide Icons, Modern Enterprise CSS (DM Sans & Manrope typography).
+* **Backend**: Java 21, Spring Boot 3.4.5, Spring Data JPA, Hibernate, Bean Validation.
+* **Database**: MySQL 8.0 (`smartparcel` database, `parcels` table).
+* **Testing**: JUnit 5, Spring Boot Test, MockMvc, in-memory H2 test suite.
+
+---
+
+## 🚀 Quick Start Guide
+
+### 1. Database Setup
+Ensure MySQL Server is running on port `3306`:
+```sql
+CREATE DATABASE IF NOT EXISTS smartparcel;
+```
+Configure your credentials in `backend/src/main/resources/application.properties` if different from default (`root` with blank password).
+
+### 2. Start the Backend API
+From the project root:
+```cmd
+cd backend
+mvnw.cmd spring-boot:run
+```
+* Backend API base URL: **`http://localhost:8080`**
+* Health check: **`http://localhost:8080/api/health`**
+
+### 3. Start the Frontend Application
+In a separate terminal window:
+```cmd
+cd frontend
+npm install
+npm run dev
+```
+* Web Application URL: **`http://localhost:5173`**
+
+---
+
+## 🧪 Running Automated Unit & Integration Tests
+The backend includes 10 automated test cases covering health checks, input validation, role filtering, slot scheduling, OTP generation, wrong OTP rejection, and successful handover:
+```cmd
+cd backend
+mvnw.cmd test
+```
+All 10 tests run in an isolated in-memory environment with 100% pass rate.
+
+---
+
+## 📋 REST API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Service health status check |
+| `GET` | `/api/parcels` | Query parcels (`role=ADMIN`, `role=SECURITY`, or `role=RESIDENT&flatNumber=A-101`) |
+| `GET` | `/api/parcels/{id}` | Retrieve single parcel by ID |
+| `GET` | `/api/parcels/stats` | Aggregated society KPI metrics and courier share |
+| `POST` | `/api/parcels` | Register a new incoming parcel |
+| `PATCH` | `/api/parcels/{id}/slot` | Book resident delivery time window |
+| `POST` | `/api/parcels/{id}/generate-otp` | Generate 6-digit demo OTP |
+| `POST` | `/api/parcels/{id}/handover` | Verify OTP and confirm package handover |
+| `DELETE` | `/api/parcels/{id}` | Delete a parcel record |
+| `POST` | `/api/parcels/seed` | Seed database with realistic apartment parcels |
+| `POST` | `/api/parcels/reset` | Clear all parcel records |
+
+---
+
+## 🎯 Step-by-Step Viva Demonstration Flow
+
+1. Open **`http://localhost:5173`** in your browser.
+2. Click **Admin & Audit** tab -> Click **"Seed Demo Data"**. Notice all KPI metrics update and sample packages appear across flats.
+3. Switch to **Security Desk** tab:
+   - Click **"Auto-Generate"** to create a tracking number (`AMZ-XXXX`).
+   - Select courier (`Amazon`) and click flat chip `A-101`.
+   - Click **"Register & Issue Inward Receipt"**.
+4. Switch to **Resident Portal** tab:
+   - Notice the bell alert notification for Flat `A-101`.
+   - View the active parcel progress stepper.
+   - Click a time chip (e.g. `4:00 PM – 6:00 PM`) to schedule delivery.
+   - Click **"View Digital Pickup Pass"** to inspect the QR code pass.
+5. Switch back to **Security Desk**:
+   - Locate the parcel -> Click **"Generate Demo OTP"**.
+   - The 6-digit OTP displays and pre-fills the verification input.
+   - Click **"Confirm Handover"**. The official Handover Slip modal appears.
+6. Switch to **Admin & Audit**:
+   - Verify the package is marked as **Handed Over**.
+   - Click **"Export CSV"** to download the society movement log.

@@ -1,0 +1,33 @@
+# Node & Frontend build artifacts
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+# Java & Maven build artifacts
+backend/target/
+*.jar
+*.war
+*.class
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+application-prod.properties
+
+# Logs & crash dumps
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# OS & IDE files
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
