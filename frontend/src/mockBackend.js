@@ -221,9 +221,15 @@ function buildMockRouteQueue(parcels) {
 }
 
 export async function handleMockApi(url, method = 'GET', body = null) {
-  const path = url.replace(/^https?:\/\/[^/]+/, '').replace(/^\/api/, '');
-  const [cleanPath, queryStr] = path.split('?');
-  const query = new URLSearchParams(queryStr || '');
+  let cleanPath = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0];
+  if (cleanPath.startsWith('/api')) {
+    cleanPath = cleanPath.slice(4);
+  }
+  if (!cleanPath.startsWith('/')) {
+    cleanPath = '/' + cleanPath;
+  }
+  const queryStr = url.includes('?') ? url.split('?')[1] : '';
+  const query = new URLSearchParams(queryStr);
   const parcels = getStoredParcels();
   const users = getStoredUsers();
 
@@ -531,6 +537,71 @@ export async function handleMockApi(url, method = 'GET', body = null) {
     return newP;
   }
 
+  // 22. USER PREFERENCES
+  if (cleanPath.includes('/preferences')) {
+    return {
+      defaultInstruction: 'Hand over personally',
+      defaultSlot: '4:00 PM – 6:00 PM',
+      quietHoursEnabled: false,
+      vacationMode: false
+    };
+  }
+
+  // 23. CONFIRM SCHEDULE
+  const confirmSchedMatch = cleanPath.match(/^\/parcels\/(\d+)\/confirm-schedule$/);
+  if (confirmSchedMatch && method === 'POST') {
+    const id = parseInt(confirmSchedMatch[1], 10);
+    const target = parcels.find(p => p.id === id);
+    if (target) {
+      target.agentScheduleConfirmed = true;
+      target.agentScheduleConfirmedAt = new Date().toISOString();
+      target.agentScheduleConfirmMessage = body?.note || 'Schedule confirmed by Delivery Agent';
+      saveStoredParcels(parcels);
+      return target;
+    }
+  }
+
+  // 24. ISSUE REPORTING & DISPUTES
+  const issueMatch = cleanPath.match(/^\/parcels\/(\d+)\/issue$/);
+  if (issueMatch && method === 'POST') {
+    const id = parseInt(issueMatch[1], 10);
+    const target = parcels.find(p => p.id === id);
+    if (target) {
+      target.issueReported = true;
+      target.issueCategory = body?.issueCategory || 'Package issue';
+      target.issueNotes = body?.issueNotes || '';
+      target.issueStatus = 'OPEN';
+      saveStoredParcels(parcels);
+      return target;
+    }
+  }
+
+  const resolveMatch = cleanPath.match(/^\/parcels\/(\d+)\/resolve-issue$/);
+  if (resolveMatch && method === 'POST') {
+    const id = parseInt(resolveMatch[1], 10);
+    const target = parcels.find(p => p.id === id);
+    if (target) {
+      target.issueStatus = 'RESOLVED';
+      saveStoredParcels(parcels);
+      return target;
+    }
+  }
+
+  // 25. CHAT MESSAGES
+  const msgMatch = cleanPath.match(/^\/parcels\/(\d+)\/messages$/);
+  if (msgMatch) {
+    if (method === 'GET') return [];
+    if (method === 'POST') {
+      return { id: Date.now(), parcelId: parseInt(msgMatch[1], 10), content: body?.content || '', senderName: body?.senderName || 'User', createdAt: new Date().toISOString() };
+    }
+  }
+
+  // 26. SLA ESCALATION
+  if (cleanPath.includes('escalate')) {
+    return { message: 'SLA escalated successfully', count: 1 };
+  }
+
   // Default empty object
   return {};
 }
+

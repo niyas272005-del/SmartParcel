@@ -29,6 +29,16 @@ const PARCELS_API = `${API}/parcels`;
 const AUTH_API = `${API}/auth`;
 const NOTIFS_API = `${API}/notifications`;
 
+const hasConfiguredBackend = Boolean(import.meta.env.VITE_API_URL);
+const isLocalhost = Boolean(
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+   window.location.hostname === '127.0.0.1' ||
+   window.location.hostname.startsWith('192.168.') ||
+   window.location.hostname.startsWith('10.'))
+);
+const isStaticPreviewMode = !hasConfiguredBackend && !isLocalhost;
+
 const TIME_SLOTS = [
   '8:00 AM – 10:00 AM',
   '10:00 AM – 12:00 PM',
@@ -376,6 +386,12 @@ export default function App() {
   }
 
   async function request(url, method = 'GET', body) {
+    // If running in static cloud preview mode (e.g. Vercel preview without a custom backend),
+    // immediately serve via client-side mock engine to prevent 404 / 405 Method Not Allowed errors.
+    if (isStaticPreviewMode) {
+      return await handleMockApi(url, method, body);
+    }
+
     let res;
     let networkFailed = false;
     try {
@@ -388,9 +404,8 @@ export default function App() {
       networkFailed = true;
     }
 
-    // Seamless fallback to client-side mock engine when running on static deployments
-    // (e.g. Vercel or GitHub Pages preview) where the Spring Boot backend is not attached.
-    if (networkFailed || (res && res.status === 404)) {
+    // Seamless fallback to client-side mock engine if remote backend is unreachable or returns an error status
+    if (networkFailed || (res && !res.ok && (res.status === 404 || res.status === 405 || res.status === 502 || res.status === 504))) {
       try {
         return await handleMockApi(url, method, body);
       } catch (mockErr) {
