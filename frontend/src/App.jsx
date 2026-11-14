@@ -22,6 +22,7 @@ import {
   Star, AlertTriangle, SlidersHorizontal, PlaneTakeoff, Smartphone, BellRing, ShieldAlert, Upload, CheckCircle2, Trash2, FileText,
   Boxes, RotateCcw
 } from 'lucide-react';
+import { handleMockApi } from './mockBackend';
 
 const API = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
 const PARCELS_API = `${API}/parcels`;
@@ -376,17 +377,27 @@ export default function App() {
 
   async function request(url, method = 'GET', body) {
     let res;
+    let networkFailed = false;
     try {
       res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : undefined
       });
-    } catch (networkErr) {
-      throw new Error(
-        `Cannot reach SmartParcel API (${API}). Verify the backend server is running and CORS / VITE_API_URL are configured.`
-      );
+    } catch (_) {
+      networkFailed = true;
     }
+
+    // Seamless fallback to client-side mock engine when running on static deployments
+    // (e.g. Vercel or GitHub Pages preview) where the Spring Boot backend is not attached.
+    if (networkFailed || (res && res.status === 404)) {
+      try {
+        return await handleMockApi(url, method, body);
+      } catch (mockErr) {
+        throw new Error(mockErr.message || 'Request failed');
+      }
+    }
+
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       throw new Error(data.message || `Request failed (${res.status})`);
